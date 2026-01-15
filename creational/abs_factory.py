@@ -1,56 +1,42 @@
-from typing import Type
-import random
+from abc import ABC, abstractmethod
 
 
 
-class Pet:
-    def __init__(self, name: str):
-        self.name = name
-
-
-    def speak(self) -> None:
-        raise NotImplementedError
-
-    def __str__(self) -> str:
-        raise NotImplementedError
+# Interface
+class PaymentProcessor(ABC):
+    @abstractmethod
+    def process_payment(self, amount: float):
+        pass
 
 
 
-class Dog(Pet):
-    def speak(self) -> None:
-        print("Woof")
+# Concrete Implementations
+class PaypalPayment(PaymentProcessor):
+    def process_payment(self, amount):
+        print(f"Pay using paypal {amount}$")
 
-    def __str__(self) -> str:
-        return f"Dog <{self.name}>"
+class StripePayment(PaymentProcessor):
+    def process_payment(self, amount):
+        print(f"Pay using stripe {amount}$")
 
+    
 
+# The factory
+class PaymentFactory:
+    @staticmethod
+    def get_processor(method_name):
+        processors = {
+            "paypal": PaypalPayment,
+            "stripe": StripePayment,
+        }
 
-class Cat(Pet):
-    def speak(self) -> None:
-        print("Meow")
+        processor_method = processors.get(method_name)
+        if not processor_method:
+            raise ValueError(f"This {method_name} is not supported!")
+        return processor_method()
+    
 
-    def __str__(self) -> str:
-        return f"Cat <{self.name}>"
+payment_method = "x"
 
-
-
-
-class PetShop:
-    def __init__(self, animal_factory: Type[Pet]):
-        self.pet_factory = animal_factory
-
-
-    def buy_pet(self, name: str) -> Pet:
-        pet = self.pet_factory(name)
-        print(f"Here is your lovely {pet}")
-        return pet
-
-
-
-if __name__ == "__main__":
-    animals = [Dog, Cat]
-    random_animal: Type[Pet] = random.choice(animals)
-    shop_pet = PetShop(random_animal)
-    shop_pet.buy_pet("Max")
-    import doctest
-    doctest.testmod()
+processor = PaymentFactory.get_processor(payment_method)
+processor.process_payment(100)
